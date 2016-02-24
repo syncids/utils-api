@@ -89,7 +89,14 @@ namespace Utils.API.Controllers
 
         private async Task<string> GetBody(HttpRequestMessage request)
         {
-            return await request.Content.ReadAsStringAsync();
+            try
+            {
+                return await request.Content.ReadAsStringAsync();
+            }
+            catch
+            {
+                return "";
+            }
         }
 
         private byte[] Download(WebClient wc, string url)
