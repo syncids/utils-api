@@ -10,12 +10,100 @@ using System.Web;
 using System.Text;
 using System.Threading.Tasks;
 using System;
+using System.Collections.Generic;
 
 namespace Utils.API.Controllers
 {
     [RoutePrefix("pdf")]
     public class PdfController : ApiController
     {
+        [HttpGet, Route("invoice")]
+        public HttpResponseMessage Invoice(string date, string number, string total, string emails, string clientNumber, string matter, string description)
+        {
+            byte[] pdf = null;
+            using (var ms = new MemoryStream())
+            {
+                using (var doc = new Document())
+                {
+                    doc.SetMargins(60, 60, 40, 40);
+                    PdfWriter.GetInstance(doc, ms);
+                    doc.Open();
+
+                    #region Header
+                    var table = new PdfPTable(4) { WidthPercentage = 100 };
+                    var colSizes = new List<float> { 120f, 130f, 140f };
+                    colSizes.Add(doc.PageSize.Width - colSizes.Sum());
+                    table.SetWidths(colSizes.ToArray());
+                    table.AddCell(new PdfPCell
+                    {
+                        Image = Image.GetInstance(HttpContext.Current.Request.MapPath("~\\App_Data\\Logo.jpg")),
+                        BorderColorRight = BaseColor.WHITE,
+                        Rowspan = 3
+                    });
+
+                    table.AddCell(new PdfPCell(CreatePhrase("950 E. State Hwy 114\nSuite 160\nSouthlake, TX 76092"))
+                    {
+                        HorizontalAlignment = Element.ALIGN_CENTER,
+                        VerticalAlignment = Element.ALIGN_MIDDLE,
+                        Rowspan = 3
+                    });
+
+                    table.AddCell(CreateCell("Invoice Date", Element.ALIGN_RIGHT));
+                    table.AddCell(CreateCell(date, Element.ALIGN_CENTER));
+                    table.AddCell(CreateCell("Invoice Number", Element.ALIGN_RIGHT));
+                    table.AddCell(CreateCell(number, Element.ALIGN_CENTER));
+                    table.AddCell(CreateCell("Invoice Total", Element.ALIGN_RIGHT));
+                    table.AddCell(CreateCell(total, Element.ALIGN_CENTER));
+                    doc.Add(table);
+                    #endregion
+
+                    #region Emails
+                    doc.Add(CreatePhrase(" "));
+                    table = new PdfPTable(1) { WidthPercentage = 100 };
+                    table.AddCell(CreateCell($"Invoice for ${emails}", Element.ALIGN_CENTER));
+                    doc.Add(table);
+                    #endregion
+
+                    #region Matters
+                    doc.Add(CreatePhrase(" "));
+                    table = new PdfPTable(4) { WidthPercentage = 100 };
+                    colSizes = new List<float> { 120f, 130f, 80f };
+                    colSizes.Insert(2, doc.PageSize.Width - colSizes.Sum());
+                    table.SetWidths(colSizes.ToArray());
+
+                    var columns = new List<string> { "Client", "Matter", "Description", "Amount" };                    
+                    columns.ForEach(c =>
+                    {
+                        var cell = new PdfPCell
+                        {
+                            Phrase = CreatePhrase(c, headerFont),
+                            HorizontalAlignment = Element.ALIGN_CENTER                                                    
+                        };
+                        table.AddCell(cell);
+                    });
+
+                    columns = new List<string> { clientNumber, matter, description, total };
+                    columns.ForEach(c =>
+                    {
+                        table.AddCell(CreateCell(c, Element.ALIGN_CENTER));
+                    });
+                    doc.Add(table);
+                    #endregion
+
+                    #region Footer
+                    doc.Add(CreatePhrase("\nIf you have any questions, please contact us at info@syncids.com.\n"));
+                    doc.Add(CreatePhrase("\nThank you for using SyncIDS.com!"));
+                    #endregion
+                }
+                pdf = ms.ToArray();
+            }  
+
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            response.Content = new ByteArrayContent(pdf);
+            response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+            return response;
+        }
+
         [HttpGet, Route("merge")]
         public HttpResponseMessage Merge(string urls)
         {
@@ -130,6 +218,21 @@ namespace Utils.API.Controllers
                     }
                 }
             }
+        }
+
+        static Font headerFont = FontFactory.GetFont(BaseFont.HELVETICA, 10, Font.BOLD);
+        static Font baseFont = FontFactory.GetFont(BaseFont.HELVETICA, 10);
+        static PdfPCell CreateCell(string text, int? alignment)
+        {
+            var cell = new PdfPCell(CreatePhrase(text));
+            if (alignment.HasValue) cell.HorizontalAlignment = alignment.Value;
+            return cell;
+        }
+
+        static Phrase CreatePhrase(string str, Font font = null)
+        {
+            if (font == null) font = baseFont;
+            return new Phrase(str, font);
         }
     }
 }
