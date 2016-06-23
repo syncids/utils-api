@@ -60,7 +60,7 @@ namespace Utils.API.Controllers
                     #region Emails
                     doc.Add(CreatePhrase(" "));
                     table = new PdfPTable(1) { WidthPercentage = 100 };
-                    table.AddCell(CreateCell($"Invoice for ${emails}", Element.ALIGN_CENTER));
+                    table.AddCell(CreateCell($"Invoice for {emails}", Element.ALIGN_CENTER));
                     doc.Add(table);
                     #endregion
 
