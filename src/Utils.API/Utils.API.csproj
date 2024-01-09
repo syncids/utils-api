@@ -107,6 +107,7 @@
     <Content Include="packages.config" />
     <Content Include="App_Data\Forms\IDSv2.1.17.pdf" />
     <Content Include="App_Data\Forms\IDSv2.1.18.pdf" />
+    <Content Include="App_Data\Forms\IDSv2.1.18.2024.pdf" />
     <None Include="Properties\PublishProfiles\LocalIIS.pubxml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
