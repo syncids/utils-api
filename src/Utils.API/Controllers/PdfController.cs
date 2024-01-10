@@ -9,8 +9,8 @@ using iTextSharp.text;
 using System.Web;
 using System.Text;
 using System.Threading.Tasks;
-using System;
 using System.Collections.Generic;
+using System.Net.Http.Formatting;
 
 namespace Utils.API.Controllers
 {
@@ -172,6 +172,15 @@ namespace Utils.API.Controllers
             var response = new HttpResponseMessage(HttpStatusCode.OK);
             response.Content = new ByteArrayContent(filedPdf);
             response.Content.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+            return response;
+        }
+
+        [HttpGet, Route("health-check")]
+        public HttpResponseMessage HealthtCheck(string p = "No parameter p provided")
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK);
+            var content = new { success = true, p };
+            response.Content = new ObjectContent(content.GetType(), content, new JsonMediaTypeFormatter());
             return response;
         }
 
